@@ -60,20 +60,21 @@ export const agentOrchestrator = async (payload, onToken) => {
 
         switch (tool) {
             case 'extract_pdf_text':
-            case 'run_ocr':
-                if (!file) throw new Error('PDF/Image file is required for extraction.');
-                
-                onToken('thought', `\nExtracting text from ${fileType === 'application/pdf' ? 'PDF' : 'Image'}...`);
-                
-                const rawTextResult = await pdfTextExtractor(file);
-                
-                agentState.scratchpad.extractedText = rawTextResult;
-                
-                onToken('thought', '\nExtraction complete. Generating summary...');
-                const summary = await summarizeText(rawTextResult, onToken);
-                onToken('final_output', summary);
+                        case 'run_ocr':
+                            if (!file) throw new Error('PDF/Image file is required for extraction.');
+                            
+                            onToken('thought', `\nExtracting text from ${fileType === 'application/pdf' ? 'PDF' : 'Image'}...`);
+                            
+                            // --- CRITICAL CHANGE: Pass the file name ---
+                            const rawTextResult = await pdfTextExtractor(file, payload.fileName); // PASS FILE NAME HERE
+                            
+                            agentState.scratchpad.extractedText = rawTextResult;
+                            
+                            onToken('thought', '\nExtraction complete. Generating summary...');
+                            const summary = await summarizeText(rawTextResult, onToken);
+                            onToken('final_output', summary);
 
-                break;
+                            break;
 
             case 'extract_csv_data':
                 if (!file || fileType !== 'text/csv') throw new Error('CSV file is required for data parsing.');

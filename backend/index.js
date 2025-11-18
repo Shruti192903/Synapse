@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import agentRoutes from './routes/agentRoutes.js';
 import connectDB from './db.js';
 
-dotenv.config();
+dotenv.config({ path: './backend/.env' });
 connectDB();
 
 const app = express();
