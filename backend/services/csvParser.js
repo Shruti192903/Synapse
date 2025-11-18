@@ -1,10 +1,5 @@
 import Papa from 'papaparse';
 
-/**
- * Infer a simple schema for the CSV data (string or number).
- * @param {Array<Object>} data - The parsed CSV data.
- * @returns {Array<Object>} An array of objects describing the schema.
- */
 const inferSchema = (data) => {
     if (!data || data.length === 0) return [];
 
@@ -13,10 +8,9 @@ const inferSchema = (data) => {
         let type = 'string';
         let isNumerical = true;
 
-        for (let i = 0; i < Math.min(data.length, 100); i++) { // Sample up to 100 rows
+        for (let i = 0; i < Math.min(data.length, 100); i++) {
             const value = data[i][header];
 
-            // Check if the value can be parsed as a finite number
             if (value !== null && value !== undefined && value !== '' && isNaN(parseFloat(value))) {
                 isNumerical = false;
                 break;
@@ -33,11 +27,6 @@ const inferSchema = (data) => {
     return schema;
 };
 
-/**
- * Parses a base64 encoded CSV string.
- * @param {string} base64Content - The base64 string of the CSV file.
- * @returns {Promise<{rows: Array<Object>, schema: Array<Object>}>}
- */
 export const csvParser = async (base64Content) => {
     const csvString = Buffer.from(base64Content, 'base64').toString('utf8');
 

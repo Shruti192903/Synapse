@@ -1,24 +1,7 @@
-// 'use client';
-
-// import { useState, useRef, useEffect } from 'react';
-// import { useSearchParams } from 'next/navigation';
-// import { Send, Loader2, FileText, ArrowRight } from 'lucide-react';
-// import { Button } from '@/components/ui/button';
-// import { Textarea } from '@/components/ui/textarea';
-// import { Card, CardContent } from '@/components/ui/card';
-// import { ScrollArea } from '@/components/ui/scroll-area';
-// import { fetchAgentResponse } from '@/lib/streamingClient';
-// import { MessageBubble } from '@/components/MessageBubble.jsx';
-// import { FileUploadBox } from '@/components/FileUploadBox.jsx';
-// import { ThinkingIndicator } from '@/components/ThinkingIndicator.jsx';
-// import { useToast } from '@/components/ui/use-toast.js';
-// import { cn } from '@/lib/utils';
-// import { ThemeToggle } from '@/components/ThemeToggle.jsx';
-
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, Loader2, FileText, ArrowRight } from 'lucide-react';
+import { Send, Loader2, FileText, ArrowRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
@@ -39,7 +22,7 @@ export default function ChatPage() {
     const scrollRef = useRef(null);
     const { toast } = useToast();
 
-    // Scroll logic
+    // Scroll logic: scrolls to the bottom whenever messages change
     useEffect(() => {
         if (scrollRef.current) {
             scrollRef.current.scrollTo({
@@ -48,62 +31,107 @@ export default function ChatPage() {
             });
         }
     }, [messages]);
-
-    // Dummy logic for demonstration (replace with actual fetchAgentResponse logic)
+    
+    // Core logic to handle message sending and streaming
     const handleSendMessage = async (e) => {
         e.preventDefault();
+        // Prevent sending if no input/file or if already loading
         if ((!input.trim() && !file) || isLoading) return;
-        
+
+        const userMessage = {
+            id: Date.now(),
+            sender: 'user',
+            content: input.trim(),
+            file: file ? { name: file.name, type: file.type } : null,
+        };
+
+        // 1. Add user message to history
+        setMessages((prev) => [...prev, userMessage]);
+        setInput('');
         setIsLoading(true);
-        // Simulate adding user message and agent placeholder
-        const userMessageId = messages.length + 1;
+
+        const formData = new FormData();
+        formData.append('message', userMessage.content || `Analyze the uploaded file: ${file.name}`);
+        if (file) {
+            formData.append('file', file);
+            formData.append('fileType', file.type);
+            formData.append('fileName', file.name);
+        }
         
-        setMessages((prev) => [
-            ...prev,
-            {
-                id: userMessageId,
-                sender: 'user',
-                content: input.trim() || `Attached: ${file?.name}`,
-                file: file ? { name: file.name, type: file.type } : undefined,
-            },
-            {
-                id: userMessageId + 1,
+        // Clear file state after preparing formData
+        const agentMessageId = Date.now() + 1; // FIX: Declare in scope for catch/finally
+        setFile(null); 
+
+        try {
+            // 2. Add agent placeholder message
+            
+            const placeholder = {
+                id: agentMessageId,
                 sender: 'agent',
                 content: '',
                 status: 'thinking',
-                metadata: { thought: 'Analyzing intent...' },
-            },
-        ]);
-        
-        const currentInput = input;
-        const currentFile = file;
-        setInput('');
-        setFile(null); 
-        
-        // --- REAL LOGIC: Replace this placeholder block with actual streaming ---
-        try {
-            // NOTE: Re-implement the real streaming logic here using fetchAgentResponse
-            await new Promise(resolve => setTimeout(resolve, 1500)); 
-            
-            setMessages((prevMessages) =>
-                prevMessages.map((msg) =>
-                    msg.id === userMessageId + 1 && msg.sender === 'agent'
-                        ? { ...msg, content: `Analysis complete for: "${currentInput}". Found 5 key metrics.`, status: 'complete', metadata: {} }
-                        : msg
-                )
-            );
+                metadata: { thought: 'Connecting to agent...' },
+            };
+            setMessages((prev) => [...prev, placeholder]);
+
+            // 3. Start streaming from the backend proxy
+            await fetchAgentResponse(formData, (chunk) => {
+                setMessages((prev) => {
+                    const newMessages = [...prev];
+                    const currentMessageIndex = newMessages.findIndex((m) => m.id === agentMessageId);
+
+                    if (currentMessageIndex !== -1) {
+                        const currentMessage = newMessages[currentMessageIndex];
+                        
+                        // Handle different chunk types from the backend
+                        if (chunk.type === 'text') {
+                            currentMessage.content += chunk.data;
+                            currentMessage.status = 'streaming';
+                            // Clear thought when streaming text begins
+                            if (currentMessage.content.length > 0) {
+                                delete currentMessage.metadata.thought;
+                            }
+                        } else if (chunk.type === 'thought') {
+                            // Update the thinking indicator
+                            currentMessage.metadata.thought = chunk.data; 
+                            currentMessage.status = 'thinking';
+                        } else if (chunk.type === 'chart' || chunk.type === 'email_preview' || chunk.type === 'table') {
+                            // Store final structured widget data
+                            currentMessage.metadata.widget = { type: chunk.type, data: chunk.data };
+                        } else if (chunk.type === 'error') {
+                            currentMessage.content += `\n\n**ERROR:** ${chunk.data}`;
+                        } else if (chunk.type === 'end' || chunk.type === 'final_output') {
+                            // Signal completion
+                            currentMessage.status = 'complete';
+                            delete currentMessage.metadata.thought;
+                        }
+                    }
+                    return newMessages;
+                });
+            });
 
         } catch (error) {
-            console.error('Streaming error:', error);
+            console.error("Streaming error:", error);
+            const errorMessage = error.message || "Unknown communication error.";
+            toast({
+                title: "Agent Error",
+                description: `Request failed: ${errorMessage}`,
+                variant: "destructive",
+            });
+            // Update the agent message with the error (FIXED SYNTAX)
             setMessages((prev) => 
-                prev.map(m => m.id === userMessageId + 1 ? { ...m, content: `Error: ${error.message}`, status: 'error' } : m)
+                prev.map(m => m.id === agentMessageId ? { 
+                    ...m, 
+                    content: (m.content || "") + `\n\n**Fatal Error:** ${errorMessage}`, 
+                    status: 'complete', 
+                    metadata: {} 
+                } : m)
             );
         } finally {
             setIsLoading(false);
         }
-        // --- END REAL LOGIC ---
     };
-
+    
     const handleKeyDown = (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -112,7 +140,7 @@ export default function ChatPage() {
     };
     
     return (
-        // Full screen container for centering
+        // Full screen container for the application
         <div className="flex flex-col h-screen bg-background text-foreground font-sans">
             
             {/* Header */}
@@ -125,66 +153,68 @@ export default function ChatPage() {
 
             {/* Main Content Area */}
             <main className="flex-1 overflow-hidden relative">
+                {/* Scroll Area must contain full height content to enable vertical centering in the empty state */}
                 <ScrollArea ref={scrollRef} className="h-full w-full">
-                    
-                    {messages.length === 0 ? (
+                    <div className="max-w-4xl mx-auto h-full"> 
                         
-                        // *** CENTERED MINIMAL UI (Vercel/Notion Vibe) ***
-                        <div className="flex flex-col items-center justify-center min-h-full h-full text-center px-4 md:px-8 py-16">
+                        {messages.length === 0 ? (
                             
-                            <Card className="max-w-3xl w-full p-8 md:p-12 bg-card/70 shadow-2xl shadow-primary/10 rounded-2xl border border-border/50 transition-all duration-300 hover:shadow-primary/20">
+                            <div className="flex flex-col items-center justify-center min-h-[calc(100vh-100px)] text-center px-4 md:px-8 py-16">
                                 
-                                <FileText className="w-10 h-10 mb-6 text-primary mx-auto opacity-80" />
-                                
-                                <h2 className="text-4xl md:text-5xl font-extrabold tracking-tighter text-foreground mb-4">
-                                    <span className="text-primary">Synapse</span> Knowledge Workspace
-                                </h2>
-                                
-                                <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10 tracking-tight leading-relaxed">
-                                    Your autonomous agent for **advanced data analysis, contract drafting, and real-time claim verification** across PDFs, CSVs, and images.
-                                </p>
-                                
-                                {/* Centralized Input/Action Area */}
-                                <div className="flex flex-col items-center space-y-4">
+                                <Card className="max-w-3xl w-full p-8 md:p-12 bg-card/70 shadow-2xl shadow-primary/10 rounded-2xl border border-border/50 transition-all duration-300 hover:shadow-primary/20">
                                     
-                                    <FileUploadBox file={file} setFile={setFile} disabled={isLoading} />
+                                    <FileText className="w-10 h-10 mb-6 text-primary mx-auto opacity-80" />
                                     
-                                    {/* Combined Input and Button */}
-                                    <div className="flex w-full max-w-lg items-end gap-3">
-                                        <Textarea
-                                            value={input}
-                                            onChange={(e) => setInput(e.target.value)}
-                                            onKeyDown={handleKeyDown}
-                                            placeholder={file ? `Attached file: ${file.name}. Ask for analysis or drafting...` : 'Ask a general question or describe your task...'}
-                                            className="min-h-[50px] resize-none border-2 shadow-inner focus:ring-2 focus:ring-primary/50"
-                                            rows={1}
-                                        />
-                                        <Button 
-                                            onClick={handleSendMessage} 
-                                            disabled={isLoading || (!input.trim() && !file)} 
-                                            size="icon" 
-                                            className="h-[50px] w-[50px] shrink-0 text-lg transition-all duration-200"
-                                        >
-                                            {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
-                                        </Button>
+                                    <h2 className="text-4xl md:text-5xl font-extrabold tracking-tighter text-foreground mb-4">
+                                        <span className="text-primary">Synapse</span> Knowledge Workspace
+                                    </h2>
+                                    
+                                    <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10 tracking-tight leading-relaxed">
+                                        Your autonomous agent for **advanced data analysis, contract drafting, and real-time claim verification** across PDFs, CSVs, and images.
+                                    </p>
+                                    
+                                    {/* Centralized Input/Action Area */}
+                                    <div className="flex flex-col items-center space-y-4">
+                                        
+                                        <FileUploadBox file={file} setFile={setFile} disabled={isLoading} />
+                                        
+                                        {/* Combined Input and Button */}
+                                        <div className="flex w-full max-w-lg items-end gap-3">
+                                            <Textarea
+                                                value={input}
+                                                onChange={(e) => setInput(e.target.value)}
+                                                onKeyDown={handleKeyDown}
+                                                placeholder={file ? `Attached file: ${file.name}. Ask for analysis or drafting...` : 'Ask a general question or describe your task...'}
+                                                className="min-h-[50px] resize-none border-2 shadow-inner focus:ring-2 focus:ring-primary/50"
+                                                rows={1}
+                                            />
+                                            <Button 
+                                                onClick={handleSendMessage} 
+                                                disabled={isLoading || (!input.trim() && !file)} 
+                                                size="icon" 
+                                                className="h-[50px] w-[50px] shrink-0 text-lg transition-all duration-200"
+                                            >
+                                                {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                                            </Button>
+                                        </div>
                                     </div>
-                                </div>
-                            </Card>
+                                </Card>
 
-                        </div>
-                    ) : (
-                        // *** CHAT MESSAGE RENDERING (when history exists) ***
-                        <div className="max-w-3xl mx-auto p-4 md:p-6 space-y-6">
-                            {messages.map((msg, index) => (
-                                <MessageBubble key={index} message={msg} setMessages={setMessages} />
-                            ))}
-                            {isLoading && <ThinkingIndicator text={messages.slice(-1)[0]?.metadata?.thought || "Thinking..."} />}
-                        </div>
-                    )}
+                            </div>
+                        ) : (
+                            // *** CHAT MESSAGE RENDERING (when history exists) ***
+                            <div className="p-4 md:p-6 pb-24 space-y-6"> {/* Added pb-24 for padding above sticky input */}
+                                {messages.map((msg, index) => (
+                                    <MessageBubble key={index} message={msg} setMessages={setMessages} />
+                                ))}
+                                {isLoading && <ThinkingIndicator text={messages.slice(-1)[0]?.metadata?.thought || "Thinking..."} />}
+                            </div>
+                        )}
+                    </div>
                 </ScrollArea>
             </main>
 
-            {/* Sticky Input Area (Only shown when chat history is present) */}
+            {/* Sticky Input Area (Always visible when chat history exists) */}
             {messages.length > 0 && (
                 <div className="absolute bottom-0 left-0 right-0 px-6 py-4 bg-background border-t border-border/50 shadow-2xl z-10">
                     <div className="max-w-3xl mx-auto flex items-end gap-3">
@@ -208,7 +238,7 @@ export default function ChatPage() {
                             className="min-h-[50px] resize-none pr-10"
                             rows={1}
                         />
-                        <Button onClick={handleSendMessage} disabled={isLoading || !input.trim()} size="icon" className="h-[50px] w-[50px] shrink-0">
+                        <Button onClick={handleSendMessage} disabled={isLoading || (!input.trim() && !file)} size="icon" className="h-[50px] w-[50px] shrink-0">
                             {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
                         </Button>
                     </div>

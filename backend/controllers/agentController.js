@@ -11,8 +11,8 @@ export const handleAgentRequest = async (req, res) => {
     const { message, fileType, fileName } = req.body;
     const file = req.file;
 
-    if (!message) {
-        return res.status(400).json({ error: 'Message is required.' });
+    if (!message && !file) {
+        return res.status(400).json({ error: 'Message or file is required.' });
     }
 
     // Set up headers for streaming
@@ -32,9 +32,11 @@ export const handleAgentRequest = async (req, res) => {
 
         const onToken = (type, data) => {
             // Stream thoughts and final output
-            if (type === 'thought' || type === 'text') {
-                streamResponse(res, type, data);
-            } else if (type === 'final_output' || type === 'email_preview' || type === 'table' || type === 'chart') {
+            if (res.writableEnded) {
+                console.warn('Attempted to write to ended stream.');
+                return;
+            }
+            if (type === 'thought' || type === 'text' || type === 'final_output' || type === 'email_preview' || type === 'table' || type === 'chart' || type === 'error') {
                 streamResponse(res, type, data);
             }
         };
@@ -42,10 +44,15 @@ export const handleAgentRequest = async (req, res) => {
         await agentOrchestrator(payload, onToken);
 
     } catch (error) {
-        console.error('Agent Orchestrator Error:', error);
-        streamResponse(res, 'error', `An unexpected error occurred: ${error.message}`);
+        console.error('Agent Orchestrator Fatal Error:', error);
+        // Ensure the error is streamed and the response ends cleanly
+        if (!res.writableEnded) {
+            streamResponse(res, 'error', `A critical error occurred during orchestration: ${error.message}`);
+        }
     } finally {
-        res.end();
+        if (!res.writableEnded) {
+            res.end();
+        }
     }
 };
 

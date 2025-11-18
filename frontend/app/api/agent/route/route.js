@@ -1,6 +1,3 @@
-// This file acts as the Next.js API route proxy to the Express Backend.
-// It is crucial for handling file uploads and streaming responses correctly within the Next.js environment.
-
 import { NextResponse } from 'next/server';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
@@ -13,11 +10,10 @@ export async function POST(request) {
     const response = await fetch(`${BACKEND_URL}/api/agent/chat`, {
       method: 'POST',
       body: formData,
-      // The backend should handle the 'Content-Type: multipart/form-data' from the form-data library automatically
+      // Next.js correctly handles Content-Type for FormData objects
     });
 
     if (!response.ok) {
-      // Attempt to read error message from the backend
       let errorText = await response.text();
       try {
           const errorJson = JSON.parse(errorText);
@@ -30,10 +26,9 @@ export async function POST(request) {
     }
 
     // Pass the streaming response directly through to the client
-    // The ReadableStream in the Fetch API response is what we need.
     return new NextResponse(response.body, {
       headers: {
-        'Content-Type': 'application/jsonl', // Match the backend's JSON Lines format
+        'Content-Type': 'application/jsonl', // JSON Lines for streaming
       },
     });
 

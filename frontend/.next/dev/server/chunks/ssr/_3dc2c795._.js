@@ -1705,21 +1705,6 @@ function ThemeToggle() {
 "[project]/app/page.jsx [app-ssr] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-// 'use client';
-// import { useState, useRef, useEffect } from 'react';
-// import { useSearchParams } from 'next/navigation';
-// import { Send, Loader2, FileText, ArrowRight } from 'lucide-react';
-// import { Button } from '@/components/ui/button';
-// import { Textarea } from '@/components/ui/textarea';
-// import { Card, CardContent } from '@/components/ui/card';
-// import { ScrollArea } from '@/components/ui/scroll-area';
-// import { fetchAgentResponse } from '@/lib/streamingClient';
-// import { MessageBubble } from '@/components/MessageBubble.jsx';
-// import { FileUploadBox } from '@/components/FileUploadBox.jsx';
-// import { ThinkingIndicator } from '@/components/ThinkingIndicator.jsx';
-// import { useToast } from '@/components/ui/use-toast.js';
-// import { cn } from '@/lib/utils';
-// import { ThemeToggle } from '@/components/ThemeToggle.jsx';
 __turbopack_context__.s([
     "default",
     ()=>ChatPage
@@ -1729,6 +1714,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$send$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Send$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/send.js [app-ssr] (ecmascript) <export default as Send>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$loader$2d$circle$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Loader2$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/loader-circle.js [app-ssr] (ecmascript) <export default as Loader2>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2d$text$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__FileText$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/file-text.js [app-ssr] (ecmascript) <export default as FileText>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$x$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__X$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/x.js [app-ssr] (ecmascript) <export default as X>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/components/ui/button.jsx [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$textarea$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/components/ui/textarea.jsx [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/components/ui/card.jsx [app-ssr] (ecmascript)");
@@ -1762,7 +1748,7 @@ function ChatPage() {
     const [file, setFile] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
     const scrollRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRef"])(null);
     const { toast } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$use$2d$toast$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useToast"])();
-    // Scroll logic
+    // Scroll logic: scrolls to the bottom whenever messages change
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
         if (scrollRef.current) {
             scrollRef.current.scrollTo({
@@ -1773,59 +1759,108 @@ function ChatPage() {
     }, [
         messages
     ]);
-    // Dummy logic for demonstration (replace with actual fetchAgentResponse logic)
+    // Core logic to handle message sending and streaming
     const handleSendMessage = async (e)=>{
         e.preventDefault();
+        // Prevent sending if no input/file or if already loading
         if (!input.trim() && !file || isLoading) return;
-        setIsLoading(true);
-        // Simulate adding user message and agent placeholder
-        const userMessageId = messages.length + 1;
+        const userMessage = {
+            id: Date.now(),
+            sender: 'user',
+            content: input.trim(),
+            file: file ? {
+                name: file.name,
+                type: file.type
+            } : null
+        };
+        // 1. Add user message to history
         setMessages((prev)=>[
                 ...prev,
-                {
-                    id: userMessageId,
-                    sender: 'user',
-                    content: input.trim() || `Attached: ${file?.name}`,
-                    file: file ? {
-                        name: file.name,
-                        type: file.type
-                    } : undefined
-                },
-                {
-                    id: userMessageId + 1,
-                    sender: 'agent',
-                    content: '',
-                    status: 'thinking',
-                    metadata: {
-                        thought: 'Analyzing intent...'
-                    }
-                }
+                userMessage
             ]);
-        const currentInput = input;
-        const currentFile = file;
         setInput('');
+        setIsLoading(true);
+        const formData = new FormData();
+        formData.append('message', userMessage.content || `Analyze the uploaded file: ${file.name}`);
+        if (file) {
+            formData.append('file', file);
+            formData.append('fileType', file.type);
+            formData.append('fileName', file.name);
+        }
+        // Clear file state after preparing formData
+        const agentMessageId = Date.now() + 1; // FIX: Declare in scope for catch/finally
         setFile(null);
-        // --- REAL LOGIC: Replace this placeholder block with actual streaming ---
         try {
-            // NOTE: Re-implement the real streaming logic here using fetchAgentResponse
-            await new Promise((resolve)=>setTimeout(resolve, 1500));
-            setMessages((prevMessages)=>prevMessages.map((msg)=>msg.id === userMessageId + 1 && msg.sender === 'agent' ? {
-                        ...msg,
-                        content: `Analysis complete for: "${currentInput}". Found 5 key metrics.`,
+            // 2. Add agent placeholder message
+            const placeholder = {
+                id: agentMessageId,
+                sender: 'agent',
+                content: '',
+                status: 'thinking',
+                metadata: {
+                    thought: 'Connecting to agent...'
+                }
+            };
+            setMessages((prev)=>[
+                    ...prev,
+                    placeholder
+                ]);
+            // 3. Start streaming from the backend proxy
+            await (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$streamingClient$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["fetchAgentResponse"])(formData, (chunk)=>{
+                setMessages((prev)=>{
+                    const newMessages = [
+                        ...prev
+                    ];
+                    const currentMessageIndex = newMessages.findIndex((m)=>m.id === agentMessageId);
+                    if (currentMessageIndex !== -1) {
+                        const currentMessage = newMessages[currentMessageIndex];
+                        // Handle different chunk types from the backend
+                        if (chunk.type === 'text') {
+                            currentMessage.content += chunk.data;
+                            currentMessage.status = 'streaming';
+                            // Clear thought when streaming text begins
+                            if (currentMessage.content.length > 0) {
+                                delete currentMessage.metadata.thought;
+                            }
+                        } else if (chunk.type === 'thought') {
+                            // Update the thinking indicator
+                            currentMessage.metadata.thought = chunk.data;
+                            currentMessage.status = 'thinking';
+                        } else if (chunk.type === 'chart' || chunk.type === 'email_preview' || chunk.type === 'table') {
+                            // Store final structured widget data
+                            currentMessage.metadata.widget = {
+                                type: chunk.type,
+                                data: chunk.data
+                            };
+                        } else if (chunk.type === 'error') {
+                            currentMessage.content += `\n\n**ERROR:** ${chunk.data}`;
+                        } else if (chunk.type === 'end' || chunk.type === 'final_output') {
+                            // Signal completion
+                            currentMessage.status = 'complete';
+                            delete currentMessage.metadata.thought;
+                        }
+                    }
+                    return newMessages;
+                });
+            });
+        } catch (error) {
+            console.error("Streaming error:", error);
+            const errorMessage = error.message || "Unknown communication error.";
+            toast({
+                title: "Agent Error",
+                description: `Request failed: ${errorMessage}`,
+                variant: "destructive"
+            });
+            // Update the agent message with the error (FIXED SYNTAX)
+            setMessages((prev)=>prev.map((m)=>m.id === agentMessageId ? {
+                        ...m,
+                        content: (m.content || "") + `\n\n**Fatal Error:** ${errorMessage}`,
                         status: 'complete',
                         metadata: {}
-                    } : msg));
-        } catch (error) {
-            console.error('Streaming error:', error);
-            setMessages((prev)=>prev.map((m)=>m.id === userMessageId + 1 ? {
-                        ...m,
-                        content: `Error: ${error.message}`,
-                        status: 'error'
                     } : m));
         } finally{
             setIsLoading(false);
         }
-    // --- END REAL LOGIC ---
     };
     const handleKeyDown = (e)=>{
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -1833,7 +1868,7 @@ function ChatPage() {
             handleSendMessage(e);
         }
     };
-    return(// Full screen container for centering
+    return(// Full screen container for the application
     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         className: "flex flex-col h-screen bg-background text-foreground font-sans",
         children: [
@@ -1849,24 +1884,24 @@ function ChatPage() {
                                 children: "Agent 🧠"
                             }, void 0, false, {
                                 fileName: "[project]/app/page.jsx",
-                                lineNumber: 121,
+                                lineNumber: 149,
                                 columnNumber: 29
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/page.jsx",
-                        lineNumber: 120,
+                        lineNumber: 148,
                         columnNumber: 17
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ThemeToggle$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ThemeToggle"], {}, void 0, false, {
                         fileName: "[project]/app/page.jsx",
-                        lineNumber: 123,
+                        lineNumber: 151,
                         columnNumber: 17
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/page.jsx",
-                lineNumber: 119,
+                lineNumber: 147,
                 columnNumber: 13
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("main", {
@@ -1874,150 +1909,157 @@ function ChatPage() {
                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$scroll$2d$area$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ScrollArea"], {
                     ref: scrollRef,
                     className: "h-full w-full",
-                    children: messages.length === 0 ? // *** CENTERED MINIMAL UI (Vercel/Notion Vibe) ***
-                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        className: "flex flex-col items-center justify-center min-h-full h-full text-center px-4 md:px-8 py-16",
-                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
-                            className: "max-w-3xl w-full p-8 md:p-12 bg-card/70 shadow-2xl shadow-primary/10 rounded-2xl border border-border/50 transition-all duration-300 hover:shadow-primary/20",
-                            children: [
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2d$text$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__FileText$3e$__["FileText"], {
-                                    className: "w-10 h-10 mb-6 text-primary mx-auto opacity-80"
-                                }, void 0, false, {
-                                    fileName: "[project]/app/page.jsx",
-                                    lineNumber: 137,
-                                    columnNumber: 33
-                                }, this),
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
-                                    className: "text-4xl md:text-5xl font-extrabold tracking-tighter text-foreground mb-4",
-                                    children: [
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                            className: "text-primary",
-                                            children: "Synapse"
-                                        }, void 0, false, {
-                                            fileName: "[project]/app/page.jsx",
-                                            lineNumber: 140,
-                                            columnNumber: 37
-                                        }, this),
-                                        " Knowledge Workspace"
-                                    ]
-                                }, void 0, true, {
-                                    fileName: "[project]/app/page.jsx",
-                                    lineNumber: 139,
-                                    columnNumber: 33
-                                }, this),
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                    className: "text-lg text-muted-foreground max-w-2xl mx-auto mb-10 tracking-tight leading-relaxed",
-                                    children: "Your autonomous agent for **advanced data analysis, contract drafting, and real-time claim verification** across PDFs, CSVs, and images."
-                                }, void 0, false, {
-                                    fileName: "[project]/app/page.jsx",
-                                    lineNumber: 143,
-                                    columnNumber: 33
-                                }, this),
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: "flex flex-col items-center space-y-4",
-                                    children: [
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$FileUploadBox$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["FileUploadBox"], {
-                                            file: file,
-                                            setFile: setFile,
-                                            disabled: isLoading
-                                        }, void 0, false, {
-                                            fileName: "[project]/app/page.jsx",
-                                            lineNumber: 150,
-                                            columnNumber: 37
-                                        }, this),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                            className: "flex w-full max-w-lg items-end gap-3",
-                                            children: [
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$textarea$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Textarea"], {
-                                                    value: input,
-                                                    onChange: (e)=>setInput(e.target.value),
-                                                    onKeyDown: handleKeyDown,
-                                                    placeholder: file ? `Attached file: ${file.name}. Ask for analysis or drafting...` : 'Ask a general question or describe your task...',
-                                                    className: "min-h-[50px] resize-none border-2 shadow-inner focus:ring-2 focus:ring-primary/50",
-                                                    rows: 1
-                                                }, void 0, false, {
-                                                    fileName: "[project]/app/page.jsx",
-                                                    lineNumber: 154,
-                                                    columnNumber: 41
-                                                }, this),
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
-                                                    onClick: handleSendMessage,
-                                                    disabled: isLoading || !input.trim() && !file,
-                                                    size: "icon",
-                                                    className: "h-[50px] w-[50px] shrink-0 text-lg transition-all duration-200",
-                                                    children: isLoading ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$loader$2d$circle$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Loader2$3e$__["Loader2"], {
-                                                        className: "h-5 w-5 animate-spin"
+                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        className: "max-w-4xl mx-auto h-full",
+                        children: messages.length === 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "flex flex-col items-center justify-center min-h-[calc(100vh-100px)] text-center px-4 md:px-8 py-16",
+                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
+                                className: "max-w-3xl w-full p-8 md:p-12 bg-card/70 shadow-2xl shadow-primary/10 rounded-2xl border border-border/50 transition-all duration-300 hover:shadow-primary/20",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2d$text$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__FileText$3e$__["FileText"], {
+                                        className: "w-10 h-10 mb-6 text-primary mx-auto opacity-80"
+                                    }, void 0, false, {
+                                        fileName: "[project]/app/page.jsx",
+                                        lineNumber: 166,
+                                        columnNumber: 37
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
+                                        className: "text-4xl md:text-5xl font-extrabold tracking-tighter text-foreground mb-4",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-primary",
+                                                children: "Synapse"
+                                            }, void 0, false, {
+                                                fileName: "[project]/app/page.jsx",
+                                                lineNumber: 169,
+                                                columnNumber: 41
+                                            }, this),
+                                            " Knowledge Workspace"
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/app/page.jsx",
+                                        lineNumber: 168,
+                                        columnNumber: 37
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-lg text-muted-foreground max-w-2xl mx-auto mb-10 tracking-tight leading-relaxed",
+                                        children: "Your autonomous agent for **advanced data analysis, contract drafting, and real-time claim verification** across PDFs, CSVs, and images."
+                                    }, void 0, false, {
+                                        fileName: "[project]/app/page.jsx",
+                                        lineNumber: 172,
+                                        columnNumber: 37
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "flex flex-col items-center space-y-4",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$FileUploadBox$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["FileUploadBox"], {
+                                                file: file,
+                                                setFile: setFile,
+                                                disabled: isLoading
+                                            }, void 0, false, {
+                                                fileName: "[project]/app/page.jsx",
+                                                lineNumber: 179,
+                                                columnNumber: 41
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                className: "flex w-full max-w-lg items-end gap-3",
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$textarea$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Textarea"], {
+                                                        value: input,
+                                                        onChange: (e)=>setInput(e.target.value),
+                                                        onKeyDown: handleKeyDown,
+                                                        placeholder: file ? `Attached file: ${file.name}. Ask for analysis or drafting...` : 'Ask a general question or describe your task...',
+                                                        className: "min-h-[50px] resize-none border-2 shadow-inner focus:ring-2 focus:ring-primary/50",
+                                                        rows: 1
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/page.jsx",
-                                                        lineNumber: 168,
-                                                        columnNumber: 58
-                                                    }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$send$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Send$3e$__["Send"], {
-                                                        className: "h-5 w-5"
+                                                        lineNumber: 183,
+                                                        columnNumber: 45
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
+                                                        onClick: handleSendMessage,
+                                                        disabled: isLoading || !input.trim() && !file,
+                                                        size: "icon",
+                                                        className: "h-[50px] w-[50px] shrink-0 text-lg transition-all duration-200",
+                                                        children: isLoading ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$loader$2d$circle$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Loader2$3e$__["Loader2"], {
+                                                            className: "h-5 w-5 animate-spin"
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/app/page.jsx",
+                                                            lineNumber: 197,
+                                                            columnNumber: 62
+                                                        }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$send$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Send$3e$__["Send"], {
+                                                            className: "h-5 w-5"
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/app/page.jsx",
+                                                            lineNumber: 197,
+                                                            columnNumber: 109
+                                                        }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/page.jsx",
-                                                        lineNumber: 168,
-                                                        columnNumber: 105
+                                                        lineNumber: 191,
+                                                        columnNumber: 45
                                                     }, this)
-                                                }, void 0, false, {
-                                                    fileName: "[project]/app/page.jsx",
-                                                    lineNumber: 162,
-                                                    columnNumber: 41
-                                                }, this)
-                                            ]
-                                        }, void 0, true, {
-                                            fileName: "[project]/app/page.jsx",
-                                            lineNumber: 153,
-                                            columnNumber: 37
-                                        }, this)
-                                    ]
-                                }, void 0, true, {
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/app/page.jsx",
+                                                lineNumber: 182,
+                                                columnNumber: 41
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/app/page.jsx",
+                                        lineNumber: 177,
+                                        columnNumber: 37
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/app/page.jsx",
+                                lineNumber: 164,
+                                columnNumber: 33
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "[project]/app/page.jsx",
+                            lineNumber: 162,
+                            columnNumber: 29
+                        }, this) : // *** CHAT MESSAGE RENDERING (when history exists) ***
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "p-4 md:p-6 pb-24 space-y-6",
+                            children: [
+                                " ",
+                                messages.map((msg, index)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$MessageBubble$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["MessageBubble"], {
+                                        message: msg,
+                                        setMessages: setMessages
+                                    }, index, false, {
+                                        fileName: "[project]/app/page.jsx",
+                                        lineNumber: 208,
+                                        columnNumber: 37
+                                    }, this)),
+                                isLoading && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ThinkingIndicator$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ThinkingIndicator"], {
+                                    text: messages.slice(-1)[0]?.metadata?.thought || "Thinking..."
+                                }, void 0, false, {
                                     fileName: "[project]/app/page.jsx",
-                                    lineNumber: 148,
-                                    columnNumber: 33
+                                    lineNumber: 210,
+                                    columnNumber: 47
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/page.jsx",
-                            lineNumber: 135,
+                            lineNumber: 206,
                             columnNumber: 29
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/app/page.jsx",
-                        lineNumber: 133,
-                        columnNumber: 25
-                    }, this) : // *** CHAT MESSAGE RENDERING (when history exists) ***
-                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        className: "max-w-3xl mx-auto p-4 md:p-6 space-y-6",
-                        children: [
-                            messages.map((msg, index)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$MessageBubble$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["MessageBubble"], {
-                                    message: msg,
-                                    setMessages: setMessages
-                                }, index, false, {
-                                    fileName: "[project]/app/page.jsx",
-                                    lineNumber: 179,
-                                    columnNumber: 33
-                                }, this)),
-                            isLoading && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ThinkingIndicator$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ThinkingIndicator"], {
-                                text: messages.slice(-1)[0]?.metadata?.thought || "Thinking..."
-                            }, void 0, false, {
-                                fileName: "[project]/app/page.jsx",
-                                lineNumber: 181,
-                                columnNumber: 43
-                            }, this)
-                        ]
-                    }, void 0, true, {
-                        fileName: "[project]/app/page.jsx",
-                        lineNumber: 177,
-                        columnNumber: 25
+                        lineNumber: 158,
+                        columnNumber: 21
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/app/page.jsx",
-                    lineNumber: 128,
+                    lineNumber: 157,
                     columnNumber: 17
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/app/page.jsx",
-                lineNumber: 127,
+                lineNumber: 155,
                 columnNumber: 13
             }, this),
             messages.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2032,14 +2074,14 @@ function ChatPage() {
                                     className: "w-4 h-4 text-primary"
                                 }, void 0, false, {
                                     fileName: "[project]/app/page.jsx",
-                                    lineNumber: 195,
+                                    lineNumber: 225,
                                     columnNumber: 33
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                     children: file.name
                                 }, void 0, false, {
                                     fileName: "[project]/app/page.jsx",
-                                    lineNumber: 196,
+                                    lineNumber: 226,
                                     columnNumber: 33
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -2047,22 +2089,22 @@ function ChatPage() {
                                     size: "sm",
                                     onClick: ()=>setFile(null),
                                     className: "h-auto p-1 opacity-70 hover:opacity-100",
-                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(X, {
+                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$x$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__X$3e$__["X"], {
                                         className: "w-3 h-3"
                                     }, void 0, false, {
                                         fileName: "[project]/app/page.jsx",
-                                        lineNumber: 198,
+                                        lineNumber: 228,
                                         columnNumber: 37
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/app/page.jsx",
-                                    lineNumber: 197,
+                                    lineNumber: 227,
                                     columnNumber: 33
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/page.jsx",
-                            lineNumber: 194,
+                            lineNumber: 224,
                             columnNumber: 29
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$textarea$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Textarea"], {
@@ -2074,47 +2116,47 @@ function ChatPage() {
                             rows: 1
                         }, void 0, false, {
                             fileName: "[project]/app/page.jsx",
-                            lineNumber: 203,
+                            lineNumber: 233,
                             columnNumber: 25
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
                             onClick: handleSendMessage,
-                            disabled: isLoading || !input.trim(),
+                            disabled: isLoading || !input.trim() && !file,
                             size: "icon",
                             className: "h-[50px] w-[50px] shrink-0",
                             children: isLoading ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$loader$2d$circle$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Loader2$3e$__["Loader2"], {
                                 className: "h-5 w-5 animate-spin"
                             }, void 0, false, {
                                 fileName: "[project]/app/page.jsx",
-                                lineNumber: 212,
+                                lineNumber: 242,
                                 columnNumber: 42
                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$send$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Send$3e$__["Send"], {
                                 className: "h-5 w-5"
                             }, void 0, false, {
                                 fileName: "[project]/app/page.jsx",
-                                lineNumber: 212,
+                                lineNumber: 242,
                                 columnNumber: 89
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/app/page.jsx",
-                            lineNumber: 211,
+                            lineNumber: 241,
                             columnNumber: 25
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/page.jsx",
-                    lineNumber: 190,
+                    lineNumber: 220,
                     columnNumber: 21
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/app/page.jsx",
-                lineNumber: 189,
+                lineNumber: 219,
                 columnNumber: 17
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/app/page.jsx",
-        lineNumber: 116,
+        lineNumber: 144,
         columnNumber: 9
     }, this));
 }

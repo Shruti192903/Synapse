@@ -1,22 +1,13 @@
-import * as pdfParse from 'pdf-parse'; // Corrected import for ES modules
+import * as pdfParse from 'pdf-parse';
 import { createWorker } from 'tesseract.js';
 import { ocrExtractor } from './ocrExtractor.js';
-import { GoogleGenerativeAI } from '@google/generative-ai'; // Corrected class name
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = ai.getGenerativeModel({ model: "gemini-2.5-flash" });
-
-// Fallback OCR for image-based PDFs (using Tesseract directly as in original plan)
-const fallbackToOcr = async (base64Content) => {
-    const buffer = Buffer.from(base64Content, 'base64');
-    const worker = await createWorker('eng');
-    const { data: { text } } = await worker.recognize(buffer);
-    await worker.terminate();
-    return text;
-};
 
 // Use Gemini for semantic chunking and table continuity
 const semanticChunkingAndTableExtraction = async (fullText) => {
@@ -30,7 +21,6 @@ const semanticChunkingAndTableExtraction = async (fullText) => {
     ${fullText}
     ---`;
 
-    const model = ai.getGenerativeModel({ model: "gemini-2.5-flash" });
     const result = await model.generateContent({ contents: [{ role: "user", parts: [{ text: prompt }] }] });
     return result.text;
 };
@@ -41,7 +31,7 @@ export const pdfTextExtractor = async (base64Content) => {
     // 1. Initial attempt with pdf-parse
     let fullText = '';
     try {
-        const data = await pdfParse.default(pdfBuffer); // Use .default for CJS import in ESM
+        const data = await pdfParse.default(pdfBuffer);
         fullText = data.text;
         
         if (fullText.trim().length < 50) {
@@ -50,8 +40,8 @@ export const pdfTextExtractor = async (base64Content) => {
         }
     } catch (e) {
         console.warn(`PDF-parse failed (${e.message}). Falling back to OCR.`);
-        // 2. Fallback to Tesseract OCR
-        fullText = await fallbackToOcr(base64Content);
+        // 2. Fallback to Tesseract OCR via the dedicated service
+        fullText = await ocrExtractor(base64Content);
     }
     
     if (!fullText.trim()) {
